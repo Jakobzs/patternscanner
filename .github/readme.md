@@ -1,6 +1,6 @@
 # patternscanner
 
-[![Build](https://github.com/jakobzs/patternscanner/workflows/build/badge.svg)](https://github.com/jakobzs/patternscanner)
+[![Build](https://github.com/Jakobzs/patternscanner/actions/workflows/rust.yml/badge.svg)](https://github.com/Jakobzs/patternscanner/actions/workflows/rust.yml)
 [![API](https://docs.rs/patternscanner/badge.svg)](https://docs.rs/patternscanner)
 [![Crate](https://img.shields.io/crates/v/patternscanner)](https://crates.io/crates/patternscanner)
 [![dependency status](https://deps.rs/repo/github/jakobzs/patternscanner/status.svg)](https://deps.rs/repo/github/jakobzs/patternscanner)
