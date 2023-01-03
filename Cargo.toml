@@ -1,6 +1,6 @@
 [package]
 name = "patternscanner"
-version = "0.0.0"
+version = "0.1.0"
 edition = "2021"
 description = "A high performance multithreaded pattern scanner for Rust"
 license = "MIT"

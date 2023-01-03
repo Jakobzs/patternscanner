@@ -1,42 +1,34 @@
-use rayon::{prelude::IndexedParallelIterator, slice::ParallelSlice};
+//! This crate provides a simple API for searching for a pattern in an array of bytes.
 
-// Function that takes a series of bytes and a string pattern of bytes such as "BA AB AB FF CC DD ? ? BB"
-// and scans the series of bytes for the pattern. If the pattern is found, return the index of the first byte of the pattern.
-// If the pattern is not found, return None. The ? character in the pattern matches any byte.
-fn scan_bytes(bytes: &[u8], pattern: &str, multithreaded: bool) -> Option<usize> {
+/// Multithreaded pattern scanning
+pub mod mt;
+
+/// Singlethreaded pattern scanning
+pub mod st;
+
+/// Create a vector of bytes from a pattern string
+///
+/// # Arguments
+/// * `pattern` - The pattern string
+///
+/// # Returns
+/// * A vector of bytes
+fn create_bytes_from_string(pattern: &str) -> Vec<Option<u8>> {
     // Create a Vec of Option<u8> where None represents a ? character in the pattern string
-    let pattern_bytes = pattern
+    pattern
         .split_whitespace()
         .map(|pattern_byte| {
             if pattern_byte == "?" {
                 None
             } else {
+                if pattern_byte.len() != 2 {
+                    panic!("Invalid pattern byte: {}", pattern_byte);
+                }
+
                 Some(u8::from_str_radix(pattern_byte, 16).unwrap())
             }
         })
-        .collect::<Vec<_>>();
-
-    // Scan the bytes for the pattern using the rayon crate if multithreaded is true and single threaded if false
-    match multithreaded {
-        // Use the .par_windows() method from the rayon crate to scan the bytes in parallel
-        true => bytes
-            .par_windows(pattern_bytes.len())
-            .position_any(|window| {
-                window
-                    .iter()
-                    .zip(pattern_bytes.iter())
-                    .all(|(byte, pattern_byte)| {
-                        pattern_byte.is_none() || Some(*byte) == *pattern_byte
-                    })
-            }),
-        // Use the .windows() method to scan the bytes sequentially
-        false => bytes.windows(pattern_bytes.len()).position(|window| {
-            window
-                .iter()
-                .zip(pattern_bytes.iter())
-                .all(|(byte, pattern_byte)| pattern_byte.is_none() || Some(*byte) == *pattern_byte)
-        }),
-    }
+        .collect::<Vec<_>>()
 }
 
 #[cfg(test)]
@@ -44,15 +36,40 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_works() {
-        let result = scan_bytes(
-            &[
-                0x55, 0x66, 0x99, 0xBA, 0xAB, 0xAB, 0xFF, 0xCC, 0xDD, 0xEE, 0xFF, 0xBB,
-            ],
-            "BA AB AB FF CC DD ? ? BB",
-            true,
-        )
-        .unwrap();
-        assert_eq!(result, 3);
+    // Test the create_bytes_from_string function with a valid string
+    fn test_create_bytes_from_string_1() {
+        assert_eq!(
+            create_bytes_from_string("AA BB CC"),
+            vec![Some(0xAA), Some(0xBB), Some(0xCC)]
+        );
     }
+
+    #[test]
+    // Test the create_bytes_from_string function with a wildcard "?"
+    fn test_create_bytes_from_string_wildcard() {
+        assert_eq!(
+            create_bytes_from_string("AA BB ? ? CC"),
+            vec![Some(0xAA), Some(0xBB), None, None, Some(0xCC)]
+        );
+    }
+
+    /*
+    #[test]
+    // Test the create_bytes_from_string function with an invalid byte "GG"
+    fn test_create_bytes_from_string_error_invalid_byte() {
+        assert_eq!(
+            create_bytes_from_string("AA GG"),
+            vec![Some(0xAA), Some(0xBB), None, None, Some(0xCC)]
+        );
+    }
+
+    #[test]
+    // Test the create_bytes_from_string function with a string that contains a space between the bytes
+    fn test_create_bytes_from_string_error_space() {
+        assert_eq!(
+            create_bytes_from_string("A A BB"),
+            vec![Some(0xAA), Some(0xBB), None, None, Some(0xCC)]
+        );
+    }
+        */
 }

@@ -13,12 +13,20 @@ Add this crate as a dependency to your `Cargo.toml` file.
 
 ```toml
 [dependencies]
-patternscanner = "0.0.0"
+patternscanner = "0.1.0"
 ```
 
 ## Example
 
-TODO
+```rust
+use patternscanner::mt::pattern_scan;
+
+let result = pattern_scan(
+    &[0x00, 0x01, 0x02, 0x33, 0x35, 0x33, 0x35, 0x07, 0x08, 0x09],
+    "33 35",
+);
+assert_eq!(result, [3, 5]);
+```
 
 ## License
 
