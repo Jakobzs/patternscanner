@@ -7,6 +7,8 @@
 
 A high performance pattern scanner for bytes.
 
+This pattern scanner supports both single-threaded as well as multi-threaded scanning. Additionally, it is possible to include a wildcard `?` in the pattern.
+
 ## Installation
 
 Add this crate as a dependency to your `Cargo.toml` file.
@@ -19,8 +21,8 @@ patternscanner = "0.3.1"
 ## Example
 
 ```rust
-// Use the multithreaded pattern scanner
-use patternscanner::mt::pattern_scan;
+// Use the multithreaded pattern scanners
+use patternscanner::mt::{pattern_scan, pattern_scan_all};
 
 // Scan for a single match of the pattern
 let result = pattern_scan(
