@@ -1,9 +1,16 @@
 [package]
 name = "patternscanner"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
 description = "A high performance multithreaded pattern scanner for Rust"
 license = "MIT"
+readme = ".github/readme.md"
+repository = "https://github.com/jakobzs/patternscanner"
+documentation = "https://docs.rs/patternscanner"
+exclude = [
+    ".gitignore",
+]
 
 [dependencies]
 rayon = "1"
+thiserror = "1"
