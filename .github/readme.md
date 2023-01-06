@@ -28,21 +28,21 @@ use patternscanner::mt::{pattern_scan, pattern_scan_all};
 let result = pattern_scan(
     &[0x00, 0x01, 0x02, 0x33, 0x35, 0x33, 0x42, 0x07, 0x08, 0x09],
     "33 35",
-);
+).unwrap();
 assert_eq!(result, Some(3));
 
 // Scan for a single match of the pattern with a wildcard
 let result = pattern_scan(
     &[0x00, 0x01, 0x02, 0x33, 0x35, 0x42, 0x33, 0x35, 0x69, 0x09],
     "33 ? 42",
-);
+).unwrap();
 assert_eq!(result, Some(3));
 
 // Scan for all matches of the pattern with a wildcard
 let result = pattern_scan_all(
     &[0x00, 0x01, 0x02, 0x33, 0x35, 0x42, 0x33, 0x35, 0x69, 0x09],
     "33 35 ?",
-);
+).unwrap();
 assert_eq!(result, [3, 6]);
 ```
 
