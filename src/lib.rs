@@ -9,7 +9,7 @@ pub mod mt;
 /// Singlethreaded pattern scanning
 pub mod st;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 // The error types for the pattern scanner
 pub enum PatternScannerError {
     #[error("failed to parse the pattern byte {0} as a u8")]
@@ -100,6 +100,9 @@ mod tests {
     #[test]
     // Test the create_bytes_from_string function with a string that contains a space between the bytes
     fn test_create_bytes_from_string_error_space() {
-        assert!(create_bytes_from_string("A A BB").is_err());
+        assert_eq!(
+            create_bytes_from_string("A A BB"),
+            Err(PatternScannerError::ByteLength("A".to_owned()))
+        );
     }
 }
