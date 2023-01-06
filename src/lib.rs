@@ -94,6 +94,7 @@ mod tests {
     #[test]
     // Test the create_bytes_from_string function with an invalid byte "GG"
     fn test_create_bytes_from_string_error_invalid_byte() {
+        // There is currently no way to construct a ParseIntError so we can't test this yet, reference: https://stackoverflow.com/questions/55572098/how-to-construct-a-parseinterror-in-my-own-code
         assert!(create_bytes_from_string("AA GG").is_err());
     }
 
