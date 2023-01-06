@@ -84,10 +84,30 @@ mod tests {
 
     #[test]
     // Test the create_bytes_from_string function with a wildcard "?"
-    fn test_create_bytes_from_string_wildcard() {
+    fn test_create_bytes_from_string_wildcard_1() {
         assert_eq!(
             create_bytes_from_string("AA BB ? ? CC").unwrap(),
             vec![Some(0xAA), Some(0xBB), None, None, Some(0xCC)]
+        );
+    }
+
+    #[test]
+    // Test the create_bytes_from_string function with a wildcard "?"
+    fn test_create_bytes_from_string_wildcard_2() {
+        assert_eq!(
+            create_bytes_from_string("? AA BB ? ? CC ? ? ? FF").unwrap(),
+            vec![
+                None,
+                Some(0xAA),
+                Some(0xBB),
+                None,
+                None,
+                Some(0xCC),
+                None,
+                None,
+                None,
+                Some(0xFF)
+            ]
         );
     }
 
