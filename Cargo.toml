@@ -2,7 +2,7 @@
 name = "patternscanner"
 version = "0.3.1"
 edition = "2021"
-description = "A high performance multithreaded pattern scanner for Rust"
+description = "A high performance multithreaded pattern scanner"
 license = "MIT"
 readme = ".github/readme.md"
 repository = "https://github.com/jakobzs/patternscanner"
