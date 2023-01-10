@@ -40,12 +40,16 @@ use rayon::{
 ///
 /// * [pattern_scan_all](fn.pattern_scan_all.html)
 ///
-pub fn pattern_scan(bytes: &[u8], pattern: &str) -> Result<Option<usize>, PatternScannerError> {
+pub fn pattern_scan<T: AsRef<[u8]>, U: AsRef<str>>(
+    bytes: T,
+    pattern: U,
+) -> Result<Option<usize>, PatternScannerError> {
     // Convert the pattern string into a vector of bytes
     let pattern_bytes = create_bytes_from_string(pattern)?;
 
     // Scan the bytes for the unique pattern using the rayon crate
     Ok(bytes
+        .as_ref()
         .par_windows(pattern_bytes.len())
         .position_any(|window| {
             window
@@ -90,12 +94,16 @@ pub fn pattern_scan(bytes: &[u8], pattern: &str) -> Result<Option<usize>, Patter
 /// # See also
 ///
 /// * [pattern_scan](fn.pattern_scan.html)
-pub fn pattern_scan_all(bytes: &[u8], pattern: &str) -> Result<Vec<usize>, PatternScannerError> {
+pub fn pattern_scan_all<T: AsRef<[u8]>, U: AsRef<str>>(
+    bytes: T,
+    pattern: U,
+) -> Result<Vec<usize>, PatternScannerError> {
     // Convert the pattern string into a vector of bytes
     let pattern_bytes = create_bytes_from_string(pattern)?;
 
     // Scan the bytes for the pattern using the rayon crate
     let mut pattern_matches: Vec<usize> = bytes
+        .as_ref()
         .par_windows(pattern_bytes.len())
         .enumerate()
         .filter_map(|(i, window)| {

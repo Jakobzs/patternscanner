@@ -28,17 +28,23 @@ use crate::{create_bytes_from_string, PatternScannerError};
 ///
 /// # See also
 /// * [pattern_scan](fn.pattern_scan.html)
-pub fn pattern_scan(bytes: &[u8], pattern: &str) -> Result<Option<usize>, PatternScannerError> {
+pub fn pattern_scan<T: AsRef<[u8]>, U: AsRef<str>>(
+    bytes: T,
+    pattern: U,
+) -> Result<Option<usize>, PatternScannerError> {
     // Convert the pattern string into a vector of bytes
     let pattern_bytes = create_bytes_from_string(pattern)?;
 
     // Scan the bytes for the unique pattern, with the help of .windows() to scan the bytes sequentially
-    Ok(bytes.windows(pattern_bytes.len()).position(|window| {
-        window
-            .iter()
-            .zip(pattern_bytes.iter())
-            .all(|(byte, pattern_byte)| pattern_byte.is_none() || Some(*byte) == *pattern_byte)
-    }))
+    Ok(bytes
+        .as_ref()
+        .windows(pattern_bytes.len())
+        .position(|window| {
+            window
+                .iter()
+                .zip(pattern_bytes.iter())
+                .all(|(byte, pattern_byte)| pattern_byte.is_none() || Some(*byte) == *pattern_byte)
+        }))
 }
 
 /// Scan the bytes for all matches of the given pattern
@@ -70,12 +76,16 @@ pub fn pattern_scan(bytes: &[u8], pattern: &str) -> Result<Option<usize>, Patter
 ///
 /// # See also
 /// * [pattern_scan_single](fn.pattern_scan_single.html)
-pub fn pattern_scan_all(bytes: &[u8], pattern: &str) -> Result<Vec<usize>, PatternScannerError> {
+pub fn pattern_scan_all<T: AsRef<[u8]>, U: AsRef<str>>(
+    bytes: T,
+    pattern: U,
+) -> Result<Vec<usize>, PatternScannerError> {
     // Convert the pattern string into a vector of bytes
     let pattern_bytes = create_bytes_from_string(pattern)?;
 
     // Scan the bytes for the pattern, with the help of .windows() to scan the bytes sequentially
     Ok(bytes
+        .as_ref()
         .windows(pattern_bytes.len())
         .enumerate()
         .filter_map(|(i, window)| {
