@@ -29,8 +29,10 @@ pub enum PatternScannerError {
 ///
 /// # Returns
 /// * A vector of bytes
-fn create_bytes_from_string(pattern: &str) -> Result<Vec<Option<u8>>, PatternScannerError> {
-    let split_pattern = pattern.split_whitespace();
+fn create_bytes_from_string<T: AsRef<str>>(
+    pattern: T,
+) -> Result<Vec<Option<u8>>, PatternScannerError> {
+    let split_pattern = pattern.as_ref().split_whitespace();
 
     // Create a Vec of Option<u8> where None represents a ? character in the pattern string
     let mut v = Vec::new();
