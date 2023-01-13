@@ -41,20 +41,21 @@ impl PatternScanner {
 
     pub fn scan_all(&self) -> Result<Vec<usize>, PatternScannerError> {
         // Scan the bytes for all matches of the pattern using the rayon crate
-        Ok(self
-            .bytes
-            .par_windows(self.pattern.len())
-            .enumerate()
-            .filter(|(_, window)| {
-                window
-                    .iter()
-                    .zip(self.pattern.iter())
-                    .all(|(byte, pattern_byte)| {
-                        pattern_byte.is_none() || Some(*byte) == *pattern_byte
-                    })
-            })
-            .map(|(i, _)| i)
-            .collect())
+        Ok(self.threadpool.install(|| {
+            self.bytes
+                .par_windows(self.pattern.len())
+                .enumerate()
+                .filter(|(_, window)| {
+                    window
+                        .iter()
+                        .zip(self.pattern.iter())
+                        .all(|(byte, pattern_byte)| {
+                            pattern_byte.is_none() || Some(*byte) == *pattern_byte
+                        })
+                })
+                .map(|(i, _)| i)
+                .collect()
+        }))
     }
 }
 
@@ -244,48 +245,33 @@ mod tests {
         assert_eq!(result, vec![3, 5]);
     }
 
-    // Test scan_all with an array of 1 million bytes but in a random spot at say 600000 there is the pattern "33 35". The execution time is measured here
+    // This test measures the execution time of the scan_all function with 1 million bytes and 1 thread
     #[test]
     fn test_pattern_scan_all_1_million_bytes() {
+        // Create an array of 1 million bytes
         let mut bytes = [0u8; 1_000_000];
         bytes[600_000] = 0x33;
         bytes[600_001] = 0x35;
 
+        // Create the pattern scanner
         let scanner = PatternScannerBuilder::builder()
             .with_bytes(&bytes)
             .with_pattern("33 35")
             .with_threads(1)
             .build();
 
-        // Print out the threads:
-        println!("Threads: {}", scanner.threadpool.current_num_threads());
-
         // Start measuring the execution time
         let start = std::time::Instant::now();
 
-        let result = scanner
-            .threadpool
-            .install(|| {
-                println!("Threads: {}", scanner.threadpool.current_num_threads());
-
-                scanner
-                    .bytes
-                    .par_windows(scanner.pattern.len())
-                    .position_any(|window| {
-                        window
-                            .iter()
-                            .zip(scanner.pattern.iter())
-                            .all(|(byte, pattern_byte)| {
-                                pattern_byte.is_none() || Some(*byte) == *pattern_byte
-                            })
-                    })
-            })
-            .unwrap();
+        // Scan the bytes
+        let result = scanner.scan_all().unwrap();
 
         // Stop measuring the execution time
         let duration = start.elapsed();
+
+        // Print the execution time
         println!("Time elapsed in expensive_function() is: {:?}", duration);
 
-        //assert_eq!(result, vec![600_000]);
+        assert_eq!(result, vec![600_000]);
     }
 }
