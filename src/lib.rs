@@ -1,6 +1,11 @@
 //! This crate provides a simple API for searching for a pattern in an array of bytes as either single-threaded or multi-threaded. It supports matching on either a single pattern or all possible patterns.
 
 use core::num;
+use rayon::{
+    prelude::{IndexedParallelIterator, ParallelIterator},
+    slice::ParallelSlice,
+    ThreadPool, ThreadPoolBuilder,
+};
 use thiserror::Error;
 
 /// Multithreaded pattern scanning
@@ -14,9 +19,45 @@ pub struct PatternScanner {
     pattern: Vec<Option<u8>>,
 }
 
+impl PatternScanner {
+    pub fn scan(&self) -> Result<Option<usize>, PatternScannerError> {
+        // Scan the bytes for the unique pattern using the rayon crate
+        Ok(self
+            .bytes
+            .par_windows(self.pattern.len())
+            .position_any(|window| {
+                window
+                    .iter()
+                    .zip(self.pattern.iter())
+                    .all(|(byte, pattern_byte)| {
+                        pattern_byte.is_none() || Some(*byte) == *pattern_byte
+                    })
+            }))
+    }
+
+    pub fn scan_all(&self) -> Result<Vec<usize>, PatternScannerError> {
+        // Scan the bytes for all matches of the pattern using the rayon crate
+        Ok(self
+            .bytes
+            .par_windows(self.pattern.len())
+            .enumerate()
+            .filter(|(_, window)| {
+                window
+                    .iter()
+                    .zip(self.pattern.iter())
+                    .all(|(byte, pattern_byte)| {
+                        pattern_byte.is_none() || Some(*byte) == *pattern_byte
+                    })
+            })
+            .map(|(i, _)| i)
+            .collect())
+    }
+}
+
 pub struct PatternScannerBuilder {
     bytes: Vec<u8>,
     pattern: Vec<Option<u8>>,
+    threadpool: ThreadPoolBuilder,
 }
 
 impl PatternScannerBuilder {
@@ -24,6 +65,7 @@ impl PatternScannerBuilder {
         Self {
             bytes: Vec::new(),
             pattern: Vec::new(),
+            threadpool: ThreadPoolBuilder::new(),
         }
     }
 
@@ -34,6 +76,14 @@ impl PatternScannerBuilder {
 
     pub fn with_pattern<T: AsRef<str>>(mut self, pattern: T) -> Self {
         self.pattern = create_bytes_from_string(pattern).unwrap();
+        self
+    }
+
+    pub fn with_threads(mut self, threads: usize) -> Self {
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(threads)
+            .build_global()
+            .unwrap();
         self
     }
 
