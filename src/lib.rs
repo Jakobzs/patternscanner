@@ -17,10 +17,24 @@ pub mod st;
 pub struct PatternScanner {
     bytes: Vec<u8>,
     pattern: Vec<Option<u8>>,
+    threadpool: ThreadPool,
 }
 
 impl PatternScanner {
     pub fn scan(&self) -> Result<Option<usize>, PatternScannerError> {
+        let x = self.threadpool.install(|| {
+            self.bytes
+                .par_windows(self.pattern.len())
+                .position_any(|window| {
+                    window
+                        .iter()
+                        .zip(self.pattern.iter())
+                        .all(|(byte, pattern_byte)| {
+                            pattern_byte.is_none() || Some(*byte) == *pattern_byte
+                        })
+                })
+        });
+
         // Scan the bytes for the unique pattern using the rayon crate
         Ok(self
             .bytes
@@ -81,7 +95,6 @@ impl PatternScannerBuilder {
 
     pub fn with_threads(mut self, threads: usize) -> Self {
         self.threadpool_builder = self.threadpool_builder.num_threads(threads);
-
         self
     }
 
@@ -89,6 +102,10 @@ impl PatternScannerBuilder {
         PatternScanner {
             bytes: self.bytes,
             pattern: self.pattern,
+            threadpool: self
+                .threadpool_builder
+                .build()
+                .expect("failed to build threadpool"),
         }
     }
 }
