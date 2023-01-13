@@ -81,7 +81,7 @@ impl PatternScannerBuilder {
 
     /// Set the pattern to scan for
     pub fn with_pattern<T: AsRef<str>>(mut self, pattern: T) -> Self {
-        self.pattern = create_bytes_from_string(pattern).unwrap();
+        self.pattern = create_bytes_from_string(pattern).expect("failed to parse pattern");
         self
     }
 
