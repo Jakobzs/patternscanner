@@ -57,7 +57,7 @@ impl PatternScanner {
 pub struct PatternScannerBuilder {
     bytes: Vec<u8>,
     pattern: Vec<Option<u8>>,
-    threadpool: ThreadPoolBuilder,
+    threadpool_builder: ThreadPoolBuilder,
 }
 
 impl PatternScannerBuilder {
@@ -65,7 +65,7 @@ impl PatternScannerBuilder {
         Self {
             bytes: Vec::new(),
             pattern: Vec::new(),
-            threadpool: ThreadPoolBuilder::new(),
+            threadpool_builder: ThreadPoolBuilder::new(),
         }
     }
 
@@ -80,10 +80,8 @@ impl PatternScannerBuilder {
     }
 
     pub fn with_threads(mut self, threads: usize) -> Self {
-        rayon::ThreadPoolBuilder::new()
-            .num_threads(threads)
-            .build_global()
-            .unwrap();
+        self.threadpool_builder = self.threadpool_builder.num_threads(threads);
+
         self
     }
 
