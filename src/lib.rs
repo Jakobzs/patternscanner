@@ -17,13 +17,15 @@ pub mod st;
 pub struct PatternScanner {
     bytes: Vec<u8>,
     pattern: Vec<Option<u8>>,
-    threadpool: ThreadPool,
+    pub threadpool: ThreadPool,
 }
 
 impl PatternScanner {
     pub fn scan(&self) -> Result<Option<usize>, PatternScannerError> {
         // Scan the bytes for the unique pattern using the rayon crate
         Ok(self.threadpool.install(|| {
+            println!("YOOO");
+
             self.bytes
                 .par_windows(self.pattern.len())
                 .position_any(|window| {
@@ -254,6 +256,10 @@ mod tests {
             .with_pattern("33 35")
             .with_threads(1)
             .build();
+
+        // Print out the threads:
+        println!("Threads: {}", scanner.threadpool.current_num_threads());
+
         // Start measuring the execution time
         let start = std::time::Instant::now();
 
