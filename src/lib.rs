@@ -258,7 +258,7 @@ mod tests {
 
         // Create the pattern scanner
         let scanner = PatternScannerBuilder::builder()
-            .with_bytes(&bytes)
+            .with_bytes(bytes)
             .with_pattern("33 35")
             .with_threads(1)
             .build();
