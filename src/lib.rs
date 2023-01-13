@@ -22,7 +22,8 @@ pub struct PatternScanner {
 
 impl PatternScanner {
     pub fn scan(&self) -> Result<Option<usize>, PatternScannerError> {
-        let x = self.threadpool.install(|| {
+        // Scan the bytes for the unique pattern using the rayon crate
+        Ok(self.threadpool.install(|| {
             self.bytes
                 .par_windows(self.pattern.len())
                 .position_any(|window| {
@@ -33,20 +34,7 @@ impl PatternScanner {
                             pattern_byte.is_none() || Some(*byte) == *pattern_byte
                         })
                 })
-        });
-
-        // Scan the bytes for the unique pattern using the rayon crate
-        Ok(self
-            .bytes
-            .par_windows(self.pattern.len())
-            .position_any(|window| {
-                window
-                    .iter()
-                    .zip(self.pattern.iter())
-                    .all(|(byte, pattern_byte)| {
-                        pattern_byte.is_none() || Some(*byte) == *pattern_byte
-                    })
-            }))
+        }))
     }
 
     pub fn scan_all(&self) -> Result<Vec<usize>, PatternScannerError> {
@@ -75,7 +63,7 @@ pub struct PatternScannerBuilder {
 }
 
 impl PatternScannerBuilder {
-    pub fn new() -> Self {
+    pub fn builder() -> Self {
         Self {
             bytes: Vec::new(),
             pattern: Vec::new(),
@@ -228,5 +216,53 @@ mod tests {
             create_bytes_from_string("A A BB"),
             Err(PatternScannerError::ByteLength("A".to_owned()))
         );
+    }
+
+    #[test]
+    fn test_pattern_scan() {
+        let result = PatternScannerBuilder::builder()
+            .with_bytes(&[0x00, 0x01, 0x02, 0x33, 0x35, 0x33, 0x35, 0x07, 0x08, 0x09])
+            .with_pattern("33 35")
+            .build()
+            .scan()
+            .unwrap();
+
+        assert_eq!(result, Some(3));
+    }
+
+    #[test]
+    fn test_pattern_scan_all() {
+        let result = PatternScannerBuilder::builder()
+            .with_bytes(&[0x00, 0x01, 0x02, 0x33, 0x35, 0x33, 0x35, 0x07, 0x08, 0x09])
+            .with_pattern("33 35")
+            .build()
+            .scan_all()
+            .unwrap();
+
+        assert_eq!(result, vec![3, 5]);
+    }
+
+    // Test scan_all with an array of 1 million bytes but in a random spot at say 600000 there is the pattern "33 35". The execution time is measured here
+    #[test]
+    fn test_pattern_scan_all_1_million_bytes() {
+        let mut bytes = [0u8; 1_000_000];
+        bytes[600_000] = 0x33;
+        bytes[600_001] = 0x35;
+
+        let scanner = PatternScannerBuilder::builder()
+            .with_bytes(&bytes)
+            .with_pattern("33 35")
+            .with_threads(1)
+            .build();
+        // Start measuring the execution time
+        let start = std::time::Instant::now();
+
+        let result = scanner.scan_all().unwrap();
+
+        // Stop measuring the execution time
+        let duration = start.elapsed();
+        println!("Time elapsed in expensive_function() is: {:?}", duration);
+
+        assert_eq!(result, vec![600_000]);
     }
 }
