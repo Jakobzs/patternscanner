@@ -24,8 +24,6 @@ impl PatternScanner {
     pub fn scan(&self) -> Result<Option<usize>, PatternScannerError> {
         // Scan the bytes for the unique pattern using the rayon crate
         Ok(self.threadpool.install(|| {
-            println!("YOOO");
-
             self.bytes
                 .par_windows(self.pattern.len())
                 .position_any(|window| {
@@ -66,6 +64,7 @@ pub struct PatternScannerBuilder {
 }
 
 impl PatternScannerBuilder {
+    ///  Create a new pattern scanner builder
     pub fn builder() -> Self {
         Self {
             bytes: Vec::new(),
@@ -74,21 +73,25 @@ impl PatternScannerBuilder {
         }
     }
 
+    /// Set the bytes to scan
     pub fn with_bytes<T: AsRef<[u8]>>(mut self, bytes: T) -> Self {
         self.bytes = bytes.as_ref().to_vec();
         self
     }
 
+    /// Set the pattern to scan for
     pub fn with_pattern<T: AsRef<str>>(mut self, pattern: T) -> Self {
         self.pattern = create_bytes_from_string(pattern).unwrap();
         self
     }
 
+    /// Set the number of threads to use
     pub fn with_threads(mut self, threads: usize) -> Self {
         self.threadpool_builder = self.threadpool_builder.num_threads(threads);
         self
     }
 
+    /// Build the pattern scanner
     pub fn build(self) -> PatternScanner {
         PatternScanner {
             bytes: self.bytes,
@@ -270,7 +273,7 @@ mod tests {
         let duration = start.elapsed();
 
         // Print the execution time
-        println!("Time elapsed in expensive_function() is: {:?}", duration);
+        println!("Execution time: {:?}", duration);
 
         assert_eq!(result, vec![600_000]);
     }
