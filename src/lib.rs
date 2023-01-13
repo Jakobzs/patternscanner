@@ -9,6 +9,42 @@ pub mod mt;
 /// Singlethreaded pattern scanning
 pub mod st;
 
+pub struct PatternScanner {
+    bytes: Vec<u8>,
+    pattern: Vec<Option<u8>>,
+}
+
+pub struct PatternScannerBuilder {
+    bytes: Vec<u8>,
+    pattern: Vec<Option<u8>>,
+}
+
+impl PatternScannerBuilder {
+    pub fn new() -> Self {
+        Self {
+            bytes: Vec::new(),
+            pattern: Vec::new(),
+        }
+    }
+
+    pub fn with_bytes<T: AsRef<[u8]>>(mut self, bytes: T) -> Self {
+        self.bytes = bytes.as_ref().to_vec();
+        self
+    }
+
+    pub fn with_pattern<T: AsRef<str>>(mut self, pattern: T) -> Self {
+        self.pattern = create_bytes_from_string(pattern).unwrap();
+        self
+    }
+
+    pub fn build(self) -> PatternScanner {
+        PatternScanner {
+            bytes: self.bytes,
+            pattern: self.pattern,
+        }
+    }
+}
+
 #[derive(Error, Debug, PartialEq)]
 // The error types for the pattern scanner
 pub enum PatternScannerError {
