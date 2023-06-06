@@ -257,15 +257,12 @@ mod tests {
     #[test]
     fn test_pattern_scan_all_1_million_bytes() {
         // Create an array of 1 million bytes
-        let mut bytes = [0u8; 1_000_000];
-        bytes[600_000] = 0x33;
-        bytes[600_001] = 0x35;
+        let mut bytes = vec![0u8; 59_994_112];
+        bytes[23_000_000] = 0x33;
+        bytes[23_000_001] = 0x35;
 
         // Create the pattern scanner
-        let scanner = PatternScannerBuilder::builder()
-            .with_bytes(bytes)
-            .with_threads(1)
-            .build();
+        let scanner = PatternScannerBuilder::builder().with_bytes(bytes).build();
 
         // Start measuring the execution time
         let start = std::time::Instant::now();
@@ -279,6 +276,6 @@ mod tests {
         // Print the execution time
         println!("Execution time: {:?}", duration);
 
-        assert_eq!(result, vec![600_000]);
+        assert_eq!(result, vec![23_000_000]);
     }
 }
