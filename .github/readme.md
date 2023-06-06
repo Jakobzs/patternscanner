@@ -15,35 +15,23 @@ Add this crate as a dependency to your `Cargo.toml` file.
 
 ```toml
 [dependencies]
-patternscanner = "0.4.0"
+patternscanner = "0.5.0"
 ```
 
 ## Example
 
 ```rust
-// Use the multithreaded pattern scanners
-use patternscanner::mt::{pattern_scan, pattern_scan_all};
+use patternscanner::PatternScannerBuilder;
 
-// Scan for a single match of the pattern
-let result = pattern_scan(
-    &[0x00, 0x01, 0x02, 0x33, 0x35, 0x33, 0x42, 0x07, 0x08, 0x09],
-    "33 35",
-).unwrap();
-assert_eq!(result, Some(3));
+fn main() {
+    let result = PatternScannerBuilder::builder()
+        .with_bytes(&[0x00, 0x01, 0x02, 0x33, 0x35, 0x33, 0x35, 0x07, 0x08, 0x09])
+        .build()
+        .scan_all("33 35")
+        .unwrap();
 
-// Scan for a single match of the pattern with a wildcard
-let result = pattern_scan(
-    &[0x00, 0x01, 0x02, 0x33, 0x35, 0x42, 0x33, 0x35, 0x69, 0x09],
-    "33 ? 42",
-).unwrap();
-assert_eq!(result, Some(3));
-
-// Scan for all matches of the pattern with a wildcard
-let result = pattern_scan_all(
-    &[0x00, 0x01, 0x02, 0x33, 0x35, 0x42, 0x33, 0x35, 0x69, 0x09],
-    "33 35 ?",
-).unwrap();
-assert_eq!(result, [3, 6]);
+    assert_eq!(result, vec![3, 5]);
+}
 ```
 
 ## License
