@@ -15,7 +15,7 @@ Add this crate as a dependency to your `Cargo.toml` file.
 
 ```toml
 [dependencies]
-patternscanner = "0.5.0"
+patternscanner = "0.6.0"
 ```
 
 ## Example
