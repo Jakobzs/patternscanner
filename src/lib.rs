@@ -133,27 +133,23 @@ pub enum PatternScannerError {
 fn create_bytes_from_string<T: AsRef<str>>(
     pattern: T,
 ) -> Result<Vec<Option<u8>>, PatternScannerError> {
-    let split_pattern = pattern.as_ref().split_whitespace();
-
-    // Create a Vec of Option<u8> where None represents a ? character in the pattern string
-    let mut v = Vec::new();
-    for x in split_pattern {
-        if x == "?" || x == "??" {
-            v.push(None);
-        } else {
-            // Check that the pattern byte string is 2 characters long
-            if x.len() != 2 {
-                return Err(PatternScannerError::ByteLength(x.to_owned()));
+    pattern
+        .as_ref()
+        .split_whitespace()
+        .map(|x| {
+            if x == "?" || x == "??" {
+                Ok(None)
+            } else {
+                if x.len() != 2 {
+                    return Err(PatternScannerError::ByteLength(x.to_owned()));
+                }
+                match u8::from_str_radix(x, 16) {
+                    Ok(b) => Ok(Some(b)),
+                    Err(e) => Err(PatternScannerError::InvalidByte(e)),
+                }
             }
-
-            v.push(Some(match u8::from_str_radix(x, 16) {
-                Ok(b) => b,
-                Err(e) => return Err(PatternScannerError::InvalidByte(e)),
-            }));
-        }
-    }
-
-    Ok(v)
+        })
+        .collect()
 }
 
 #[cfg(test)]
