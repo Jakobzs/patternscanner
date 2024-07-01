@@ -23,22 +23,16 @@ impl PatternScanner {
         bytes: T,
         pattern: U,
     ) -> Result<Option<usize>, PatternScannerError> {
-        let pattern_bytes = create_bytes_from_string(pattern)?;
+        // Scan for all occurrences of the pattern in the bytes
+        let results = self.scan_all_with_bytes(bytes, pattern)?;
 
-        // Scan the bytes for the unique pattern using the rayon crate
-        Ok(self.threadpool.install(|| {
-            bytes
-                .as_ref()
-                .par_windows(pattern_bytes.len())
-                .position_any(|window| {
-                    window
-                        .iter()
-                        .zip(pattern_bytes.iter())
-                        .all(|(byte, pattern_byte)| {
-                            pattern_byte.is_none() || Some(*byte) == *pattern_byte
-                        })
-                })
-        }))
+        // Check if there are multiple occurrences of the pattern
+        if results.len() > 1 {
+            return Err(PatternScannerError::NonUniquePattern);
+        }
+
+        // Return the first (and only) result, if any
+        Ok(results.first().copied())
     }
 
     pub fn scan_all<T: AsRef<str>>(&self, pattern: T) -> Result<Vec<usize>, PatternScannerError> {
@@ -119,6 +113,8 @@ pub enum PatternScannerError {
     ByteLength(String),
     //#[error("invalid header (expected {expected:?}, found {found:?})")]
     //InvalidHeader { expected: String, found: String },
+    #[error("pattern is not unique")]
+    NonUniquePattern,
     #[error("unknown pattern scanner error")]
     Unknown,
 }
@@ -229,13 +225,22 @@ mod tests {
     #[test]
     fn test_pattern_scan() {
         let result = PatternScannerBuilder::builder()
-            .with_bytes(&[0x00, 0x01, 0x02, 0x33, 0x35, 0x33, 0x35, 0x07, 0x08, 0x09])
-            .with_threads(1)
+            .with_bytes(&[0x00, 0x01, 0x02, 0x33, 0x35, 0x33, 0x36, 0x07, 0x08, 0x09])
             .build()
             .scan("33 35")
             .unwrap();
 
         assert_eq!(result, Some(3));
+    }
+
+    #[test]
+    fn test_pattern_scan_nonunique() {
+        let result = PatternScannerBuilder::builder()
+            .with_bytes(&[0x00, 0x01, 0x02, 0x33, 0x35, 0x33, 0x35, 0x07, 0x08, 0x09])
+            .build()
+            .scan("33 35");
+
+        assert_eq!(result, Err(PatternScannerError::NonUniquePattern));
     }
 
     #[test]
