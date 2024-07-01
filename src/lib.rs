@@ -14,10 +14,12 @@ pub struct PatternScanner {
 }
 
 impl PatternScanner {
+    /// Scan for a unique pattern in the stored bytes
     pub fn scan<T: AsRef<str>>(&self, pattern: T) -> Result<Option<usize>, PatternScannerError> {
         self.scan_with_bytes(&self.bytes, pattern)
     }
 
+    /// Scan for a unique pattern in the specified bytes
     pub fn scan_with_bytes<T: AsRef<[u8]> + std::marker::Sync, U: AsRef<str>>(
         &self,
         bytes: T,
@@ -35,10 +37,12 @@ impl PatternScanner {
         Ok(results.first().copied())
     }
 
+    /// Scan for all occurrences of a pattern in the stored bytes
     pub fn scan_all<T: AsRef<str>>(&self, pattern: T) -> Result<Vec<usize>, PatternScannerError> {
         self.scan_all_with_bytes(&self.bytes, pattern)
     }
 
+    /// Scan for all occurrences of a pattern in the specified bytes
     pub fn scan_all_with_bytes<T: AsRef<[u8]> + std::marker::Sync, U: AsRef<str>>(
         &self,
         bytes: T,
